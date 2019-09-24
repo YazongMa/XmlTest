@@ -177,6 +177,8 @@ private:
 #define TAG_NAME_CLIENT_TXN_ID                  TAG_NAME_PREV"ClientTxnId"
 
 #define TAG_NAME_CASH_BACK_AMT_INFO             TAG_NAME_PREV"CashbackAmtInfo"
+#define TAG_NAME_ACCOUNT_TYPE                   TAG_NAME_PREV"AccountType"
+#define TAG_NAME_POS_SEQUENCE_NBR               TAG_NAME_PREV"PosSequenceNbr"
 
 /// Response
 #define TAG_NAME_RSP_CODE                       TAG_NAME_PREV"RspCode"

@@ -72,9 +72,9 @@
     <IncludePath>D:\TimProject\00_SDK\libiconv\include;D:\TimProject\00_SDK\libxml\include\libxml2;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)External\libiconv\include;$(SolutionDir)External\libxml\include\libxml2;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)External\libiconv\lib;$(SolutionDir)External\libxml\lib;$(LibraryPath)</LibraryPath>
-    <LibraryWPath>$(SolutionDir)External\libiconv\bin;$(SolutionDir)External\libxml\bin;$(LibraryWPath)</LibraryWPath>
+    <IncludePath>$(SolutionDir)External\libcurl\include;$(SolutionDir)External\libiconv\include;$(SolutionDir)External\libxml\include\libxml2;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\libcurl\lib;$(SolutionDir)External\libiconv\lib;$(SolutionDir)External\libxml\lib;$(LibraryPath)</LibraryPath>
+    <LibraryWPath>$(SolutionDir)External\libcurl\bin;$(SolutionDir)External\libiconv\bin;$(SolutionDir)External\libxml\bin;$(LibraryWPath)</LibraryWPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -91,7 +91,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>libxml2.lib;libiconv.lib;libcharset.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcurl-d.lib;libxml2.lib;libiconv.lib;libcharset.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

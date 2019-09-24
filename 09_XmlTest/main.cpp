@@ -10,6 +10,248 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <curl/curl.h>
+
+#include "libheartland.h"
+#include "libstructdefined.h"
+
+static char szData[2048] = { 0 };
+static char szHttpRet[4];
+
+static int TestHLPack();
+static int TestHLXml();
+static int TestHLUnPack();
+static int TestHLCommunication();
+
+int main()
+{	
+	TestHLPack();
+	// TestHLCommunication();
+	// TestHLXml();
+	// TestHLUnPack();
+	return 0;
+}
+
+
+int TestHLPack()
+{
+	HeartlandSoap	soap;
+	ST_HSOAP_INIT	init = { 0 };
+
+	strcpy(init.szDeviceId, "6399858");
+	strcpy(init.szLicenseId, "142865");
+	strcpy(init.szSiteId, "142952");
+	strcpy(init.szUserName, "701389344");
+	strcpy(init.szPassword, "$Test1234");
+	strcpy(init.szPosGatewayUrl, "http://Hps.Exchange.PosGateway");
+	soap.HeartlandSOAP_Init(&init);
+
+
+	ST_HSOAP_REQUEST request = { 0 };
+	request.nTransactionType = tt_DEBIT_SALE;
+	request.nTransactionInterface = ti_SWIPE;
+	strcpy(request.szAmt, "12.00");
+	strcpy(request.szTrackData, ";6217500034254678912=201221103201132102F");
+	strcpy(request.szAccountType, "SAVINGS");
+	strcpy(request.szPosSequenceNbr, "123456789");
+
+	int nDataLen = sizeof(szData);
+	soap.HeartlandSOAP_Pack(&request, &nDataLen, szData);
+
+	return 0;
+}
+
+
+int TestHLXml()
+{
+	SoapElement root("XmlTest");
+
+	root.addAttribute("Attr_Root_1", "Attr_Root_Value1");
+	root.addAttribute("Attr_Root_2", "Attr_Root_Value2");
+	root.addAttribute("Attr_Root_3", "Attr_Root_Value3");
+	root.addAttribute("Attr_Root_4", "Attr_Root_Value4");
+
+	SoapElementRef SubTag1 = root.addSubElement("SubTag1");
+	SoapElementRef SubTag2 = root.addSubElement("SubTag2", "SubTag2_Value");
+	SoapElementRef SubTag3 = root.addSubElement("SubTag3", "SubTag3_Value");
+	SoapElementRef SubTag4 = root.addSubElement("SubTag4");
+
+	SubTag3.addAttribute("Attr_Sub3_1", "Attr_Sub3_Value1");
+	SubTag3.addAttribute("Attr_Sub3_2", "Attr_Sub3_Value2");
+
+	SubTag4.addAttribute("Attr_Sub4_1", "Attr_Sub4_Value1");
+	SubTag4.addAttribute("Attr_Sub4_2", "Attr_Sub4_Value2");
+
+	SoapElementRef SubTag4_1 = SubTag4.addSubElement("SubTag4_1", "SubTag4_1_Value");
+	SoapElementRef SubTag4_2 = SubTag4.addSubElement("SubTag4_2", "SubTag4_2_Value");
+	SoapElementRef SubTag4_3 = SubTag4.addSubElement("SubTag4_3", "SubTag4_3_Value");
+	SoapElementRef SubTag4_4 = SubTag4.addSubElement("SubTag4_4", "SubTag4_4_Value");
+
+	SoapElementRef SubTag4_1_1 = SubTag4_1.addSubElement("SubTag4_1_1", "SubTag4_1_1_Value");
+	SoapElementRef SubTag4_1_2 = SubTag4_1.addSubElement("SubTag4_2_1", "SubTag4_1_2_Value");
+	SoapElementRef SubTag4_1_3 = SubTag4_1.addSubElement("SubTag4_3_1", "SubTag4_1_3_Value");
+	SoapElementRef SubTag4_1_4 = SubTag4_1.addSubElement("SubTag4_4_1", "SubTag4_1_4_Value");
+
+	string result = root.generateSoapString();
+
+	return 0;
+}
+
+#define d_TXN_RSP_CODE_REVERSAL                     "30"
+#define d_TXN_RSP_CODE_SUCCESS                      "00"
+
+int TestHLUnPack()
+{
+	HeartlandSoap		soap;
+	ST_HSOAP_RESPONSE	response = { 0 };
+
+#if 0
+	char* resp = "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><LicenseId>137846</LicenseId><SiteId>137907</SiteId><DeviceId>6378375</DeviceId><GatewayTxnId>1193129660</GatewayTxnId><GatewayRspCode>0</GatewayRspCode><GatewayRspMsg>Success</GatewayRspMsg><RspDT>2019-07-17T21:41:55.0593533</RspDT><UniqueDeviceId>2468</UniqueDeviceId></Header><Transaction><CreditSale><RspCode>00</RspCode><RspText>APPROVAL</RspText><AuthCode>007674</AuthCode><AVSRsltCode>0</AVSRsltCode><RefNbr>919817246151</RefNbr><CardType>Disc</CardType><AVSRsltText>AVS Not Requested.</AVSRsltText><CardBrandTxnId>071802415427628</CardBrandTxnId></CreditSale></Transaction></Ver1.0></PosResponse></soap:Body></soap:Envelope>";
+#endif
+
+#if 0
+	char* resp = "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><LicenseId>142865</LicenseId><SiteId>142952</SiteId><DeviceId>6399858</DeviceId><GatewayTxnId>1212533876</GatewayTxnId><GatewayRspCode>0</GatewayRspCode><GatewayRspMsg>Success</GatewayRspMsg><RspDT>2019-09-04T22:08:42.0112827</RspDT><UniqueDeviceId>2468</UniqueDeviceId></Header><Transaction><ReportTxnDetail><GatewayTxnId>1212612628</GatewayTxnId><SiteId>142952</SiteId><MerchName>POSGTEST714C CASTLEPAY SA</MerchName><DeviceId>6399858</DeviceId><UserName>701389344</UserName><ServiceName>CreditAuth</ServiceName><GatewayRspCode>0</GatewayRspCode><GatewayRspMsg>Success</GatewayRspMsg><ReqUtcDT>2019-09-05T03:08:19.337Z</ReqUtcDT><ReqDT>2019-09-05T03:08:19.337</ReqDT><RspUtcDT>2019-09-05T03:08:19.743Z</RspUtcDT><RspDT>2019-09-05T03:08:19.743</RspDT><SiteTrace /><OriginalGatewayTxnId>0</OriginalGatewayTxnId><MerchNbr>777701389344</MerchNbr><TermOrdinal>1</TermOrdinal><MerchAddr1>1   HEARTLAND   WAY</MerchAddr1><MerchAddr2 /><MerchCity>JEFFERSONVILL</MerchCity><MerchState>IN</MerchState><MerchZip>47130</MerchZip><MerchPhone>972-295-8700</MerchPhone><TzConversion>UTC</TzConversion><UniqueDeviceId>2468</UniqueDeviceId><Data><TxnStatus>A</TxnStatus><CardType>MC</CardType><MaskedCardNbr>222300******5780</MaskedCardNbr><CardPresent>Y</CardPresent><ReaderPresent>Y</ReaderPresent><CardSwiped>Y</CardSwiped><DebitCreditInd>C</DebitCreditInd><SaleReturnInd>S</SaleReturnInd><CVVReq>N</CVVReq><CVVRsltCode /><Amt>27.00</Amt><AuthAmt>27.00</AuthAmt><GratuityAmtInfo>0</GratuityAmtInfo><CashbackAmtInfo>0</CashbackAmtInfo><CardHolderLastName /><CardHolderFirstName /><CardHolderAddr /><CardHolderCity /><CardHolderState /><CardHolderZip /><CardHolderPhone /><CardHolderEmail /><AVSRsltCode>0</AVSRsltCode><CPCReq>N</CPCReq><CPCInd /><RspCode>00</RspCode><RspText>APPROVAL</RspText><AuthCode>093858</AuthCode><ReqACI>Y</ReqACI><RspACI /><MktSpecDataId /><TxnCode>54</TxnCode><AcctDataSrc>D</AcctDataSrc><AuthSrcCode>5</AuthSrcCode><IssTxnId>924718298866000</IssTxnId><IssValidationCode /><CardHolderIdCode>@</CardHolderIdCode><NetworkIdCode /><RefNbr>924718298866</RefNbr><TxnSeqNbr>72</TxnSeqNbr><DirectMktInvoiceNbr /><DirectMktShipMonth>0</DirectMktShipMonth><DirectMktShipDay>0</DirectMktShipDay><CPCCardHolderPONbr /><CPCTaxType /><CPCTaxAmt>0</CPCTaxAmt><SettlementAmt>27.00</SettlementAmt><AllowPartialAuth>Y</AllowPartialAuth><AVSRsltText>AVS Not Requested.</AVSRsltText><TokenizationMsg /><CryptoTypeIn>Clear</CryptoTypeIn><CryptoTypeOut>Clear</CryptoTypeOut><AllowDup>Y</AllowDup><EMVChipCondition /><EMVTagData /><EMVIssuerResp /><TypeOfPaymentData /><PaymentData /><ECommerceIndicator /><CAVVResultCode /><TokenPANLast4 /><Company /><CustomerFirstname /><CustomerLastname /><PaymentDataSource /><XID /><CardOnFileData /><CardBrandTxnId>MCC1019860905</CardBrandTxnId></Data><x_global_transaction_id /><MerchAddr3 /><AuthenticatedSiteId>142952</AuthenticatedSiteId><AuthenticatedDeviceId>6399858</AuthenticatedDeviceId></ReportTxnDetail></Transaction></Ver1.0></PosResponse></soap:Body></soap:Envelope>";
+#endif
+
+	char* resp = "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><LicenseId>142704</LicenseId><SiteId>142789</SiteId><DeviceId>664</DeviceId><GatewayTxnId>1220629879</GatewayTxnId><GatewayRspCode>30</GatewayRspCode><GatewayRspMsg>Transaction has timed out.  You may need to submit a reversal for the transaction.</GatewayRspMsg><RspDT>2019-09-17T21:09:56.7721269</RspDT><UniqueDeviceId>2468</UniqueDeviceId></Header><Transaction><CreditSale /></Transaction></Ver1.0></PosResponse></soap:Body></soap:Envelope>";
+	soap.HeartlandSOAP_Unpack(&response, resp);
+
+
+	char chTxnResult = 0x05;
+	if (memcmp(response.cGateway.szGatewayRspCode, d_TXN_RSP_CODE_REVERSAL, 2) == 0)
+		chTxnResult = 0x1B;
+	else if (memcmp(response.cTrans.szRspCode, d_TXN_RSP_CODE_SUCCESS, 2) != 0)
+		chTxnResult = 0x00;
+
+
+	return 0;
+}
+
+
+
+/* holder for curl fetch */
+struct curl_fetch_st {
+	char *payload;
+	size_t size;
+};
+
+size_t curl_cbHeader(void *ptr, size_t size, size_t nmemb, void  *userdata)
+{
+	int ret = 0;
+	if (strncmp((char *)ptr, "HTTP/1.1", 8) == 0) // get http response code
+	{
+		strtok((char *)ptr, " ");
+		userdata = (strtok(NULL, " \n")); // http response code
+
+		printf("*userdata :%s \n", (char *)userdata);
+		memcpy(szHttpRet, userdata, strlen((char *)userdata));
+
+
+		printf("szHttpRet :%s\n", szHttpRet);
+	}
+
+	printf("\n Get head Call pack*ptr :%s\n", (char *)ptr);
+	return nmemb;
+}
+
+
+size_t curl_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+	size_t realsize = size * nmemb;                             /* calculate buffer size */
+	struct curl_fetch_st *p = (struct curl_fetch_st *) userp;   /* cast pointer to fetch struct */
+
+																/* expand buffer */
+	p->payload = (char *)realloc(p->payload, p->size + realsize + 1);
+
+	/* check buffer */
+	if (p->payload == NULL) {
+		/* this isn't good */
+
+		printf("ERROR: Failed to expand buffer in curl_callback");
+		/* free buffer */
+		free(p->payload);
+		/* return */
+		return -1;
+	}
+
+	/* copy contents to buffer */
+	memcpy(&(p->payload[p->size]), contents, realsize);
+
+	/* set new buffer size */
+	p->size += realsize;
+
+	/* ensure null termination */
+	p->payload[p->size] = 0;
+
+	/* return size */
+	return realsize;
+}
+
+int TestHLCommunication()
+{
+	CURLcode rcode = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if (rcode != CURLE_OK)
+	{
+		return 1;
+	}
+
+	struct curl_slist* pHeaders = NULL;
+	pHeaders = curl_slist_append(pHeaders, "Accept-Encoding: gzip,deflate");
+	pHeaders = curl_slist_append(pHeaders, "Content-Type: text/xml;charset=UTF-8");
+	pHeaders = curl_slist_append(pHeaders, "SOAPAction: DoTransaction");
+
+	CURL* pCurlHandle = curl_easy_init();
+	if (pCurlHandle == NULL)
+	{
+		return 1;
+	}
+	struct curl_fetch_st curl_fetch = { 0 };
+
+	curl_easy_setopt(pCurlHandle, CURLOPT_VERBOSE, 1L);
+	curl_easy_setopt(pCurlHandle, CURLOPT_CAPATH, "D:\\TimProject\\09_XmlTest\\x64\\Debug");
+	curl_easy_setopt(pCurlHandle, CURLOPT_CAINFO, "D:\\TimProject\\09_XmlTest\\x64\\Debug\\ca-certificates.crt");
+	curl_easy_setopt(pCurlHandle, CURLOPT_CUSTOMREQUEST, "POST");
+	curl_easy_setopt(pCurlHandle, CURLOPT_HTTPHEADER, pHeaders);
+	curl_easy_setopt(pCurlHandle, CURLOPT_POSTFIELDS, szData);
+	curl_easy_setopt(pCurlHandle, CURLOPT_URL, "https://cert.api2-c.heartlandportico.com/Hps.Exchange.PosGateway/PosGatewayService.asmx");
+	curl_easy_setopt(pCurlHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+	curl_easy_setopt(pCurlHandle, CURLOPT_WRITEFUNCTION, curl_callback);
+	curl_easy_setopt(pCurlHandle, CURLOPT_HEADERFUNCTION, curl_cbHeader);
+	curl_easy_setopt(pCurlHandle, CURLOPT_WRITEDATA, (void *)&curl_fetch);
+	curl_easy_setopt(pCurlHandle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	curl_easy_setopt(pCurlHandle, CURLOPT_TIMEOUT, 100);
+	curl_easy_setopt(pCurlHandle, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt(pCurlHandle, CURLOPT_MAXREDIRS, 1);
+
+	// curl_easy_setopt(ch, CURLOPT_SSL_VERIFYPEER, false);
+	// printf("Info Use CURLOPT_SSL_VERIFYPEER");
+
+	rcode = curl_easy_perform(pCurlHandle);
+	curl_easy_cleanup(pCurlHandle);
+	curl_slist_free_all(pHeaders);
+
+	printf("http status:%s\n", szHttpRet);
+	if (rcode != CURLE_OK || curl_fetch.size < 1) 
+	{
+		printf("err rcode :%04X\n", rcode);
+		printf("ERROR: Failed to perform curl said: %s\n",curl_easy_strerror(rcode));
+	}
+	else
+	{
+		printf("Rresponse size:%s\n", curl_fetch.size);
+		if (curl_fetch.payload)
+		{
+			printf("Rresponse data:%s\n", curl_fetch.payload);
+			curl_fetch.payload = NULL;
+		}
+	}
+
+	return 0;
+}
+
+
+
+
+#if 0
 /*
 * This example should compile and run indifferently with libxml-1.8.8 +
 * and libxml2-2.1.0 +
@@ -153,11 +395,11 @@ parseJob(xmlDocPtr doc, xmlNsPtr ns, xmlNodePtr cur)
 		if ((!xmlStrcmp(cur->name, (const xmlChar *)"Application")) &&
 			(cur->ns == ns))
 			ret->application =
-				xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
+			xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
 		if ((!xmlStrcmp(cur->name, (const xmlChar *)"Category")) &&
 			(cur->ns == ns))
 			ret->category =
-				xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
+			xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
 		if ((!xmlStrcmp(cur->name, (const xmlChar *)"Contact")) &&
 			(cur->ns == ns))
 			ret->contact = parsePerson(doc, ns, cur);
@@ -237,11 +479,11 @@ parseGjobFile(char *filename)
 		return (NULL);
 	}
 	ns = xmlSearchNsByHref(doc, cur,
-						   (const xmlChar *)"http://www.gnome.org/some-location");
+		(const xmlChar *)"http://www.gnome.org/some-location");
 	if (ns == NULL)
 	{
 		fprintf(stderr,
-				"document of the wrong type, GJob Namespace not found\n");
+			"document of the wrong type, GJob Namespace not found\n");
 		xmlFreeDoc(doc);
 		return (NULL);
 	}
@@ -282,7 +524,7 @@ parseGjobFile(char *filename)
 	if ((xmlStrcmp(cur->name, (const xmlChar *)"Jobs")) || (cur->ns != ns))
 	{
 		fprintf(stderr, "document of the wrong type, was '%s', Jobs expected",
-				cur->name);
+			cur->name);
 		fprintf(stderr, "xmlDocDump follows\n");
 #ifdef LIBXML_OUTPUT_ENABLED
 		xmlDocDump(stderr, doc);
@@ -332,7 +574,7 @@ int main(int argc, char **argv)
 
 	/* COMPAT: Do not genrate nodes for formatting spaces */
 	LIBXML_TEST_VERSION
-	xmlKeepBlanksDefault(0);
+		xmlKeepBlanksDefault(0);
 
 	for (i = 1; i < argc; i++)
 	{
@@ -348,3 +590,5 @@ int main(int argc, char **argv)
 
 	return (0);
 }
+
+#endif

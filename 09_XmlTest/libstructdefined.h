@@ -458,6 +458,8 @@ typedef struct
     char szPinBlock[_BASE_DATA_SIZE_ * 3];
     char szTokenValue[_BASE_DATA_SIZE_ * 4];
     char szCashbackAmtInfo[_BASE_DATA_SIZE_];
+	char szAccountType[_BASE_DATA_SIZE_];
+	char szPosSequenceNbr[_BASE_DATA_SIZE_];
     
     // ParameterDownload
     char szPDLBlockReq[_BASE_DATA_SIZE_ * 16];
