@@ -26,9 +26,10 @@ static int TestHLCommunication();
 int main()
 {	
 	TestHLPack();
-	// TestHLCommunication();
+	//  TestHLCommunication();
 	// TestHLXml();
 	// TestHLUnPack();
+
 	return 0;
 }
 
@@ -48,12 +49,16 @@ int TestHLPack()
 
 
 	ST_HSOAP_REQUEST request = { 0 };
-	request.nTransactionType = tt_DEBIT_SALE;
-	request.nTransactionInterface = ti_SWIPE;
+	request.nTransactionType = tt_CREDIT_SALE;
+	request.nTransactionInterface = ti_CTLS;
 	strcpy(request.szAmt, "12.00");
-	strcpy(request.szTrackData, ";6217500034254678912=201221103201132102F");
-	strcpy(request.szAccountType, "SAVINGS");
-	strcpy(request.szPosSequenceNbr, "123456789");
+	strcpy(request.cCardData.szTrackData, "5413335060943=4912201iaiZjJOPmJ10");
+	strcpy(request.cTagData.szTagValues, "9F02060000000069999F03060000000000009F260841DE97A8023FBB205F240349123182021980500A4D4344393420763120305A0854133300897009435F3401499F360200039F090200029F2701809F34033F00018407A00000000410109F10120110A0000F040000000000000000000000FF9F3303E040089F1A0208409F3501259505000080800157115413330089700943D491220101234567895F2A0208409A031912039C01009F37046A6342D29F0702FF004F07A00000000410109F0607A00000000410109B020000");
+	request.cTagData.nTagValueType = HSOAP_TAG_VALUE_TYPE_MSD;
+
+	memcpy(request.cCardData.cEncrypData.szVersion, "04", 2);
+	memcpy(request.cCardData.cEncrypData.szEncryptedTrackNumber, "2", 1);
+	strcpy(request.cCardData.cEncrypData.szKTB, "/wECAQEGAoFVAwEH4wwDWH5ddBpwb3NwMnBlQHNlY3VyZWV4Y2hhbmdlLm5ldJ/awOfbJqe/F+5BCe26iX4PooDnKDCQ4og3QqGyFG+oVTAE4uX0MNx8jVdsINNaYNTFckWKDIETJMCzRmwOFnIYGpkBy7gBc0R3ZlEH+TfQjLmprP+lnyxbMIL1EArKpYXQaqlDmahoCR6vJyVaMMda59RJAsqEzazz+QugdMKfdNNRchH8tbh+5Teko0kCoruOky91JvnT2b6VuE/bpmf2Qk7mMfz24Yo0R5Ao5f7P");
 
 	int nDataLen = sizeof(szData);
 	soap.HeartlandSOAP_Pack(&request, &nDataLen, szData);
